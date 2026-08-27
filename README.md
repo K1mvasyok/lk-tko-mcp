@@ -67,6 +67,24 @@ claude mcp list          # проверить, что статус Connected
 4. **Подключение к Claude Code — готово.** `claude mcp add lk-tko-mcp -- uv run run.py`,
    статус `✔ Connected`. Гайд по разворачиванию для других разработчиков —
    см. `ONBOARDING.md`.
+5. **Долг/биллинг (Приоритет 1 из RESEARCH.md) — готово, 6 из 7 проверены.**
+   `get_contragent_debt`, `get_debt_by_phone`, `get_debt_by_email`,
+   `get_serviced_periods`, `get_calculation_amount_type`, `get_contract`,
+   `get_fine_details` — все реализованы через два новых REST-хелпера
+   в `lk_client.py` (`call_v3` для кастомных v3-контроллеров, `call_service`
+   для декларативных v2-сервисов). `get_contragent_bills` реализован, но
+   заблокирован багом на стороне lk-tko-v2 (см. примечание ниже).
+   `get_calculations_tabs`, `get_debt_breakdown_by_real_estate`,
+   `find_contragents_with_debt_older_than` — **не реализованы**, у них нет
+   REST-обёртки в lk-tko-v2 вообще (подтверждено grep по всему репозиторию).
+
+## Известные проблемы
+
+- **`get_contragent_bills` падает с 500.** Баг на стороне lk-tko-v2:
+  `BillRepository.getBillsByContragentAndPeriod` (строка 71) ссылается на
+  несуществующий алиас `b.documentNumber` вместо `e.documentNumber` —
+  ломает JPQL-компиляцию при любом вызове `/app/rest/v3/bill`. Заведена
+  отдельная задача на исправление в lk-tko-v2, наш код тут ни при чём.
 5. **Расширение набора инструментов** — по одному инструменту на
    конкретный повторяющийся сценарий (например, период/пени для lkUser —
    см. память проекта `project_lk_user_config`), не абстрагировать заранее.

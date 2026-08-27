@@ -106,3 +106,42 @@ def search_entity(entity: str, conditions: list[dict], view: str | None = None) 
             f"{response.status_code} {response.text}"
         )
     return response.json()
+
+
+def call_v3(method: str, path: str, params: dict | None = None, json_body: dict | None = None):
+    """Вызвать кастомный REST-контроллер lk-tko-v2 (/app/rest/v3/...).
+
+    path начинается с "/", например "/debt/by-contragent".
+    """
+    token = _get_access_token()
+    response = httpx.request(
+        method,
+        f"{_BASE_URL}/app/rest/v3{path}",
+        headers={"Authorization": f"Bearer {token}"},
+        params={k: v for k, v in (params or {}).items() if v is not None},
+        json=json_body,
+        timeout=_TIMEOUT,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Ошибка запроса к lk-tko-v2 REST API (v3{path}): "
+            f"{response.status_code} {response.text}"
+        )
+    return response.json()
+
+
+def call_service(service: str, method_name: str, params: dict):
+    """Вызвать декларативный REST-сервис lk-tko-v2 (/app/rest/v2/services/...)."""
+    token = _get_access_token()
+    response = httpx.get(
+        f"{_BASE_URL}/app/rest/v2/services/{service}/{method_name}",
+        headers={"Authorization": f"Bearer {token}"},
+        params={k: v for k, v in params.items() if v is not None},
+        timeout=_TIMEOUT,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"Ошибка запроса к lk-tko-v2 REST API (services/{service}/{method_name}): "
+            f"{response.status_code} {response.text}"
+        )
+    return response.json()
